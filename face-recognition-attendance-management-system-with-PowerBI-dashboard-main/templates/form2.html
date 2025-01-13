@@ -1,0 +1,200 @@
+<!DOCTYPE html>  
+<html>  
+<head>  
+    <title>Student Attendance Database</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+    <style>
+        /* Background Styling */
+        #page::before {
+            content: "";
+            position: absolute;
+            background: linear-gradient(to bottom right, #1d3557, #457b9d); /* Blue gradient background */
+            height: 100%;
+            width: 100%;
+            z-index: -1;
+            opacity: 0.95; /* Slight transparency */
+        }
+
+        /* Ensure the background extends over the entire page */
+        body {
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Table Styling */
+        table.table {
+            background-color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+            border: none;
+        }
+
+        table.table thead {
+            background-color: #2a9d8f; /* Teal header */
+            color: white;
+            font-weight: bold;
+        }
+
+        table.table th, table.table td {
+            text-align: center;
+            padding: 12px;
+        }
+
+        table.table tbody tr:nth-child(even) {
+            background-color: #f0f8ff; /* Light blue rows */
+        }
+
+        table.table tbody tr:nth-child(odd) {
+            background-color: #e8f9ff; /* Slightly lighter blue rows */
+        }
+
+        /* Button Styling */
+        button {
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+        }
+
+        button.btn-primary {
+            background-color: #2a9d8f; /* Teal buttons */
+            border-color: #2a9d8f;
+        }
+
+        button.btn-primary:hover {
+            background-color: #21867a; /* Darker teal on hover */
+        }
+
+        /* Heading Styling */
+        h1, h3 {
+            font-family: 'Verdana', sans-serif;
+            color: #f1faee; /* Soft white */
+        }
+
+        h1 {
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .no-records-message {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 60vh; /* Centers vertically within 60% of viewport height */
+            color: #FFD700; /* Gold color */
+            font-size: 1.8rem; /* Larger font size */
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* Back Button Styling */
+        .back-btn {
+            background-color: #ff8c00;
+            color: #121212;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 5px;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+            z-index: 9999;
+        }
+
+        .back-btn:hover {
+            background-color: #ff6f00;
+        }
+
+        /* Footer Styling */
+        footer {
+            background-color: #2a9d8f; /* Matching the header */
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+
+        footer p {
+            margin: 0;
+            font-size: 14px;
+        }
+    </style>
+</head>  
+<body>  
+
+    <!-- Back Button -->
+    <a href="javascript:history.back()" class="back-btn">Back</a>
+
+    <section id="page">
+        <div class="container">
+            <br><br><br>
+            <h1 class="text-center"><strong>Today's Attendance</strong></h1>
+            <br><br><br>
+            <h3>Details of students present today:</h3>
+            <br><br><br>
+            {% if rows %}
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Date/Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                    <tr>
+                        <td>{{ row.id }}</td>
+                        <td>{{ row.name }}</td>
+                        <td>{{ row.department }}</td>
+                        <td>{{ row.email }}</td>
+                        <td>{{ row.phone }}</td>
+                        <td>{{ row.recognition_time }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="no-records-message">
+                <p>No attendance records for today.</p>
+            </div>
+            {% endif %}
+
+            <br> 
+            <form action="/whole" method="post">
+                <button class="btn btn-primary">View Whole Database</button>
+            </form> 
+            <br> 
+            <form action="/all" method="post">
+                <button class="btn btn-primary">View Whole Attendence</button>
+            </form> 
+            <br>
+            
+            
+            <form action="/" method="GET">
+                <button class="btn btn-primary">Go back to home page</button>
+            </form> 
+        </div>
+    </section>
+    <br><br><br>
+    <!-- Footer -->
+    
+    <footer>
+        <div class="center">
+            2025 Attendance System By Malik Haider. All Rights Reserved.
+        </div>
+        
+</body>  
+</html>

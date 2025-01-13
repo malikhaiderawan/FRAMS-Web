@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capture Image for Attendance</title>
+    <style>
+        /* Basic Styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        h2 {
+            text-align: center;
+            margin-top: 30px;
+            color: #333;
+        }
+        .container {
+            width: 60%;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        #captureButton, #submitButton {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        #captureButton {
+            background-color: #0b2e13;
+            color: white;
+            margin-top: 20px;
+        }
+        #submitButton {
+            background-color: #007bff;
+            color: white;
+            margin-top: 20px;
+        }
+        #loadingMessage {
+            display: none;
+            color: #007bff;
+            text-align: center;
+            margin-top: 20px;
+        }
+        #capturedImage {
+            width: 100%;
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+        #successMessage {
+            display: none;
+            text-align: center;
+            color: green;
+            margin-top: 20px;
+            font-size: 20px;
+        }
+        video {
+            width: 100%;  /* Adjust width to fit container */
+            max-width: 500px; /* Set a max-width to prevent it from becoming too large */
+            height: auto;
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        /* Back Button */
+        #backButton {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #backButton:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <!-- Back Button -->
+    <button id="backButton" onclick="window.history.back();">Back</button>
+    
+    <h2>Face Recognition Attendance System</h2>
+    
+    <div class="container">
+        <!-- Form for entering personal details -->
+        <form id="attendanceForm">
+            <div class="form-group">
+                <input type="text" name="name" placeholder="Enter Name" required>
+            </div>
+            <div class="form-group">
+                <input type="text" name="department" placeholder="Enter Department" required>
+            </div>
+            <div class="form-group">
+                <input type="text" name="phone" placeholder="Enter Phone Number" required>
+            </div>
+            <div class="form-group">
+                <input type="email" name="email" placeholder="Enter Email" required>
+            </div>
+        </form>
+
+        <!-- Video Element -->
+        <video id="videoElement" autoplay></video>
+
+        <!-- Capture Button -->
+        <button id="captureButton">Capture Image</button>
+
+        <!-- Captured Image Display -->
+        <img id="capturedImage" style="display:none;" src="" alt="Captured Image">
+
+        <!-- Loading Message -->
+        <div id="loadingMessage">
+            <p>Submitting... Please wait.</p>
+            <img src="loading-spinner.gif" alt="Loading...">
+        </div>
+
+        <!-- Submit Button -->
+        <button id="submitButton">Submit</button>
+
+        <!-- Success Message -->
+        <div id="successMessage">
+            <p>Form submitted successfully! Thank you.</p>
+        </div>
+    </div>
+
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <script>
+        // Variables
+        const videoElement = document.getElementById('videoElement');
+        const captureButton = document.getElementById('captureButton');
+        const submitButton = document.getElementById('submitButton');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const form = document.getElementById('attendanceForm');
+        const capturedImage = document.getElementById('capturedImage');
+        const successMessage = document.getElementById('successMessage');
+        let imageData = null;
+        let stream = null;
+
+        // Access the user's webcam and stream it to the video element
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(s => {
+                stream = s;
+                videoElement.srcObject = stream;
+            })
+            .catch(error => {
+                console.error('Error accessing the camera: ', error);
+            });
+
+        // Capture image when "Capture Image" button is clicked
+        captureButton.addEventListener('click', function () {
+            // Draw the current frame of the video onto the canvas
+            context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+            // Convert the canvas to an image
+            imageData = canvas.toDataURL('image/jpeg');
+            capturedImage.src = imageData;  // Display the captured image
+            capturedImage.style.display = 'block';  // Make the image visible
+            alert('Image captured successfully!');
+
+            // Stop the video stream (camera)
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        });
+
+        // Handle form submission
+        submitButton.addEventListener('click', function () {
+            // Form validation
+            const name = form['name'].value;
+            const department = form['department'].value;
+            const phone = form['phone'].value;
+            const email = form['email'].value;
+
+            if (!name || !department || !phone || !email || !imageData) {
+                alert('Please fill out all fields and capture an image!');
+                return;
+            }
+
+            // Show loading message
+            loadingMessage.style.display = 'block';
+            submitButton.disabled = true;
+
+            const formData = new FormData(form);
+            formData.append('imageData', imageData);
+
+            fetch('/submit', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    successMessage.style.display = 'block';  // Show success message
+                    form.reset();  // Reset form fields
+                    capturedImage.style.display = 'none';  // Hide captured image
+                    setTimeout(() => {
+                        window.location.href = '/'; // Redirect to main page after successful submission
+                    }, 300); // Delay redirect to allow message to be seen
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error submitting the form: ', error);
+                alert('Something went wrong. Please try again.');
+            })
+            .finally(() => {
+                loadingMessage.style.display = 'none';
+                submitButton.disabled = false;
+            });
+        });
+    </script>
+
+    
+</body>
+</html>

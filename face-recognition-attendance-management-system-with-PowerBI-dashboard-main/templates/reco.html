@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Recognition Attendance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style1.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        h1 {
+            color: #4a90e2;
+            margin-bottom: 20px;
+        }
+
+        #videoContainer {
+            width: 80%;
+            max-width: 600px;
+            aspect-ratio: 4 / 3;
+            background: #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        video, img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        #status {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            color: white;
+            background-color: #4a90e2;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:hover {
+            background-color: #357ab8;
+        }
+
+        #recognizeButton:disabled {
+            background-color: #b0c4de;
+            cursor: not-allowed;
+        }
+
+        /* Flexbox for the buttons in one row */
+        #buttonContainer {
+            display: flex;
+            justify-content: center;
+            gap: 10px; /* Adds space between buttons */
+        }
+
+        /* Back button at the top-left corner */
+        #backButton {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background-color: #333;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #backButton:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton" onclick="window.history.back();">Back</button>
+    <h1>Face Recognition Attendance</h1>
+    <p id="status">Waiting for face recognition...</p>
+    <div id="videoContainer">
+        <video id="liveFeed" autoplay></video>
+    </div>
+
+    <!-- Buttons in one row -->
+    <div id="buttonContainer">
+        <button id="toggleCameraButton">Turn Off Camera</button>
+        <button id="recognizeButton">Click To Mark Attendance</button>
+        <button id="homeButton">Go to Home</button>
+    </div>
+
+    <script>
+        let isRecognizing = false;
+        let isCameraOn = true;
+        const videoElement = document.getElementById('liveFeed');
+        const statusElement = document.getElementById('status');
+        const recognizeButton = document.getElementById('recognizeButton');
+        const homeButton = document.getElementById('homeButton');
+        const toggleCameraButton = document.getElementById('toggleCameraButton');
+        let cameraStream;
+
+        // Access the camera and display live feed
+        async function startCamera() {
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                videoElement.srcObject = cameraStream;
+                toggleCameraButton.textContent = "Turn Off Camera";
+            } catch (error) {
+                statusElement.textContent = "Camera access denied or unavailable.";
+                recognizeButton.disabled = true;
+                console.error('Error accessing the camera:', error);
+            }
+        }
+
+        // Stop the camera feed
+        function stopCamera() {
+            if (cameraStream) {
+                const tracks = cameraStream.getTracks();
+                tracks.forEach(track => track.stop());
+                videoElement.srcObject = null;
+                toggleCameraButton.textContent = "Turn On Camera";
+            }
+        }
+
+        // Handle recognition button click
+        recognizeButton.onclick = async function () {
+            if (isRecognizing) return;
+
+            isRecognizing = true;
+            recognizeButton.disabled = true;
+            statusElement.textContent = "Recognizing face...";
+
+            try {
+                const response = await fetch('/recoo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    statusElement.innerHTML = `<p style="color: green;">${data.message}</p>`;
+                } else {
+                    statusElement.innerHTML = `<p style="color: red;">${data.message}</p>`;
+                }
+            } catch (error) {
+                statusElement.innerHTML = `<p style="color: red;">Error during recognition</p>`;
+                console.error('Error:', error);
+            } finally {
+                isRecognizing = false;
+                recognizeButton.disabled = false;
+            }
+        };
+
+        // Handle Home button click
+        homeButton.onclick = function () {
+            window.location.href = '/';  // Redirect to home page
+        };
+
+        // Toggle camera on/off
+        toggleCameraButton.onclick = function () {
+            if (isCameraOn) {
+                stopCamera();
+                isCameraOn = false;
+            } else {
+                startCamera();
+                isCameraOn = true;
+            }
+        };
+
+        // Start the camera when the page loads
+        window.onload = startCamera;
+    </script>
+
+    
+</body>
+</html>
